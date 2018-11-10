@@ -1,0 +1,208 @@
+---
+title: "Data Visualization Assignment"
+author: "Aglaia Tsopelakou A.M.:BAFT 1716"
+date: "November 2017"
+output: word_document
+---
+##Course: "Information Systems and Business Process Management"
+##Introduction to Data Visualization - Individual Assignment
+
+#Part A (60%)
+You are asked to analyze the data from “Parole.csv” dataset, which can be found in the "R Assignment – Data Visualization" section of the e-learning portal.
+
+##Loading the Data
+```{r}
+setwd("C:/Users/User/Desktop/Visualization Assignment")
+parole<-read.csv("PAROLE dataset.csv")
+library(ggplot2)
+parole$male<-as.factor(parole$male)
+parole$state<-as.factor(parole$state)
+parole$crime<-as.factor(parole$crime)
+head(parole)
+str(parole)
+summary(parole)
+```
+
+###1.1 What fraction of parole violators are female?
+```{r}
+nrow(subset(parole, parole$male==0 & parole$violator==1))/nrow(subset(parole, parole$violator==1))
+```
+
+###1.2 In this dataset, which crime is the most common in Kentucky?
+```{r}
+x = table(parole$crime[parole$state == 2])
+names(x) = c("other", "larceny", "drug-related crime", "driving-related crime")
+x
+```
+Answer:drug-related crime
+
+##Creating a Basic Histogram
+Create a histogram to find out the distribution of the age of parolees, by typing the following command in your R console:
+
+By default, geom_histogram divides the data into 30 bins. Change the width of the bins to 5 years by adding the argument binwidth = 5 to geom_histogram.
+```{r}
+ggplot(data = parole, aes(x = age) )+ geom_histogram(breaks=seq(15,70,5),closed="left")
+```
+###2.1 What is the age bracket with the most parolees? 
+Answer:20 - 24
+
+##Creating a Basic Histogram 
+
+```{r}
+ggplot(data = parole, aes(x = age,closed="left")) + geom_histogram(binwidth=5,boundary=5, color="blue")
+```
+###2.2 What does this do? Select all that apply.
+Answer:\bullet{Changes the outline color of the bars}
+
+##Adding Another Dimension
+Now suppose we are interested in seeing how the age distribution of male parolees compares to the age distribution of female parolees.
+One option would be to create a heatmap with age on one axis and male (a binary variable in our data set) on the other axis. Another option would be to stick with histograms, but to create a separate histogram for each gender. ggplot has the ability to do this automatically using the facet_grid command.
+To create separate histograms for male and female, type the following command into your R console:
+```{r}
+ggplot(data = parole, aes(x = age)) + geom_histogram(binwidth = 5,boundary=5,closed="left") + facet_grid(male ~ .)
+```
+###3.1 What is the age bracket with the most female parolees?
+Answer:\bullet{35 - 39}
+
+
+Now change the facet_grid argument to be .~male instead of male~..
+```{r}
+ggplot(data = parole, aes(x = age)) + geom_histogram(binwidth = 5,boundary=5,closed="left") + facet_grid(.~male)
+```
+###3.2 What does this do?
+Answer:\bullet{Puts the histograms side-by-side instead of on top of each other.}
+
+An alternative to faceting is to simply color the different groups differently. To color the data points by group, we need to tell ggplot that a property of the data (male or not male) should be translated to an aesthetic property of the histogram. We can do this by setting the fill parameter within the aesthetic to male.
+
+Run the following command in your R console to produce a histogram where data points are colored by group:
+```{r}
+ggplot(data = parole, aes(x = age, fill = male)) + geom_histogram(binwidth = 5,boundary=5,closed="left")
+```
+###3.3 Since we didn't specify colors to use, ggplot will use its default color selection. What color is the histogram for the female parolees?
+Answer:\bummet{Salmon}
+
+Redo the plot, making both of these changes.
+```{r}
+ggplot(data=parole,aes(x=age,fill=male))+geom_histogram(breaks=seq(15,70,5),closed="left",position='identity',alpha=0.5)+scale_x_continuous(breaks = seq(15,70,by=5))+labs(x="Age",y="Frequency",fill="Gender")
+```
+###3.4 Which of the following buckets contain no female paroles? 
+Answers:\bullet{15-19, 55 - 59, 65 - 69}
+
+##Time Served
+```{r}
+ggplot(data = parole, aes(x = time.served)) + geom_histogram(breaks=seq(0,7,1),closed="left")
+```
+##4.1 What is the most common length of time served, according to this histogram?
+Answer: \bullet{Between 4 and 5 months}
+
+Change the binwidth to 0.1 months.
+```{r}
+ggplot(data = parole, aes(x = time.served)) + geom_histogram(binwidth=0.1,closed="left",boundary=0.1)
+```
+###4.2 Now what is the most common length of time served, according to the histogram?
+Answer:\bullet{Between 3.0 and 3.1 months}
+
+Now, suppose we suspect that it is unlikely that each type of crime has the same distribution of time served. To visualize this, change the binwidth back to 1 month, and use facet_grid to create a separate histogram of time.served for each value of the variable crime.
+```{r}
+
+levels(parole$crime) = c("other", "larceny", "drug-related crime", "driving-related crime")
+ggplot(data=parole,aes(x=time.served))+geom_histogram(breaks=seq(0,7,by=1),closed="left")+facet_grid(.~crime)
+```
+###4.3.a Which crime type has no observations where time served is less than one month? Recall that crime type #2 is larceny, #3 is drug-related crime, #4 is driving-related crime, and #1 is any other crime.
+Answer: \bullet{Driving-related crimes}
+
+###4.3.b For which crime does the frequency of 5-6 month prison terms exceed the frequencies of each other term length?
+Answer:\bullet{Drug-related crimes}
+
+Now, instead of faceting the histograms, overlay them. Remember to set the position and alpha parameters so that the histograms are not stacked. Also, make sure to indicate that the fill aesthetic should be "crime".
+```{r}
+levels(parole$crime) = c("other", "larceny", "drug-related crimes", "driving-related crimes")
+ggplot(data = parole, aes(x = time.served, fill = crime)) + 
+    geom_histogram(binwidth = 1, position="identity", alpha=0.5,boundary=1,closed="left") + scale_x_continuous(breaks=0:7)
+```
+
+###4.4 Answer:\bullet{ With four different groups, it can be hard to tell them apart when they are overlayed.}
+
+#Part B (40%)
+You are asked to analyze the data from the datasets: "MVT", "MURDERS", "INTALL", which can be found in the " R Lab - Data Visualization" section of the e-learning portal.Regarding "MURDERS" and "INTALL" datasets, you are asked to execute all the commands in the corresponding .pdf files.For the MVT dataset, you are requested to execute the commands in the " GEOGRAPHICAL
+HEATMAPS USING GGPLOT2 LIBRARY" section in the corresponding .pdf file.
+##Murders
+```{r}
+murders<-read.csv("MURDERS dataset.csv")
+str(murders)
+library(maps)
+library(ggmap)
+statesMap<-map_data("state")
+str(statesMap)
+ggplot(statesMap,aes(x=long,y=lat,group=group))+geom_polygon(fill="blue",color="black")+coord_map("mercator")
+
+murders$region<-tolower(murders$State)
+murderMap<-merge(statesMap,murders,by="region")
+str(murderMap)
+
+ggplot(murderMap,aes(x=long,y=lat,group=group,fill=Murders))+geom_polygon(color="black")+scale_fill_gradient(low="black",high="red",guide="legend")+coord_map("mercator")
+
+ggplot(murderMap,aes(x=long,y=lat,group=group,fill=Population))+geom_polygon(color="black")+scale_fill_gradient(low="black",high="red",guide="legend")+coord_map("mercator")
+
+murderMap$MurderRate<-murderMap$Murders/murderMap$Population* 100000
+
+ggplot(murderMap,aes(x=long,y=lat,group=group,fill=MurderRate))+geom_polygon(color="black")+scale_fill_gradient(low="black",high="red",guide="legend")+coord_map("mercator")
+
+ggplot(murderMap,aes(x=long,y=lat,group=group,fill=MurderRate))+geom_polygon(color="black")+scale_fill_gradient(low="black",high="red",guide="legend",limits=c(0.9,10))+coord_map("mercator")
+
+ggplot(murderMap,aes(x=long,y=lat,group=group,fill=MurderRate))+geom_polygon(color="black")+scale_fill_gradient(low="black",high="red",guide="legend",name= "Murder Rate per 100k",limits=c(0.9,10))+coord_map("mercator")
+
+```
+
+##Intlall
+```{r}
+intlall<-read.csv("INTLALL dataset.csv",stringsAsFactor=FALSE)
+head(intlall)
+intlall[is.na(intlall)]=0
+head(intlall)
+world_map<-map_data("world")
+str(world_map)
+world_map<-merge(world_map,intlall,by.x="region",by.y="Citizenship")
+str(world_map)
+
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(fill="white",color="black")+coord_map("mercator",xlim=c(-180,180))
+
+world_map<-world_map[order(world_map$group,world_map$order),]
+
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(fill="white",color="black")+coord_map("mercator",xlim=c(-180,180))
+
+table(intlall$Citizenship)
+
+intlall$Citizenship[intlall$Citizenship=="China(People's Republic Of)"]="China"
+table(intlall$Citizenship)
+world_map<-merge(map_data("world"),intlall,by.x="region",by.y="Citizenship")
+world_map<-world_map[order(world_map$group,world_map$order),]
+
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(fill="white",color="black")+coord_map("mercator",xlim=c(-180,180))
+
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(aes(fill=Total),color="black")+coord_map("mercator",xlim=c(-180,180))
+
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(aes(fill=Total),color="black")+coord_map("ortho",orientation = c(20,30,0),xlim=c(-180,180))
+
+ggplot(world_map,aes(x=long,y=lat,group=group))+geom_polygon(aes(fill=Total),color="black")+coord_map("ortho",orientation = c(-37,175,0),xlim=c(-180,180))
+
+
+```
+
+##MVT
+```{r}
+mvt<-read.csv("MVT dataset.csv",stringsAsFactors = FALSE)
+library("maps")
+library("ggmap")
+chicago<-get_map(location = "chicago",zoom=11)
+ggmap(chicago)
+ggmap(chicago)+geom_point(data=mvt[1:100,],aes(x=Longitude,y=Latitude))
+LatLonCounts=as.data.frame(table(round(mvt$Longitude,2),round(mvt$Latitude,2)))
+str(LatLonCounts)
+LatLonCounts$Long=as.numeric(as.character(LatLonCounts$Var1))
+LatLonCounts$Lat=as.numeric(as.character(LatLonCounts$Var2))
+ggmap(chicago)+geom_point(data=LatLonCounts,aes(x=Long ,y=Lat,color=Freq,size=Freq))
+ggmap(chicago)+geom_point(data=LatLonCounts,aes(x=Long ,y=Lat,color=Freq,size=Freq))+scale_color_gradient(low="yellow",high="red")
+ggmap(chicago)+geom_tile(data=LatLonCounts,aes(x=Long ,y=Lat,alpha=Freq),fill="red")
+```
+
